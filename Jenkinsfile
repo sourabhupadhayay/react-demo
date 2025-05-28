@@ -5,6 +5,7 @@ pipeline {
     DOCKER_TAG = "latest"
     DOMAIN = "app.4xexch.com"
     EMAIL = "sourbhupadhayay@gmail.com"
+    WEBROOT = "/usr/share/nginx/html"
   }
   stages {
     stage('Checkout') {
@@ -28,23 +29,37 @@ pipeline {
       }
     }
 
+    stage('Run Temporary Nginx') {
+      steps {
+        sh '''
+          docker stop temp-nginx || true
+          docker rm temp-nginx || true
+          docker run -d --name temp-nginx -p 80:80 \
+            -v /usr/share/nginx/html:/usr/share/nginx/html \
+            nginx:alpine
+        '''
+      }
+    }
+
     stage('Run Certbot') {
       steps {
-        writeFile file: 'certbot-setup.sh', text: '''#!/bin/bash
-DOMAIN="app.4xexch.com"
-EMAIL="sourbhupadhayay@gmail.com"
-
-sudo apt update
-sudo apt install -y certbot
-
-# Stop any service using port 80 (to avoid conflicts with certbot)
-sudo fuser -k 80/tcp || true
-
-sudo certbot certonly --standalone -d $DOMAIN --agree-tos --email $EMAIL --non-interactive
-'''
+        writeFile file: 'certbot-setup.sh', text: """#!/bin/bash
+apt update
+apt install -y certbot
+certbot certonly --webroot -w /usr/share/nginx/html -d $DOMAIN --agree-tos --email $EMAIL --non-interactive
+"""
         sh 'chmod +x certbot-setup.sh'
         sh "sed -i 's/\\r//' certbot-setup.sh"
         sh './certbot-setup.sh'
+      }
+    }
+
+    stage('Stop Temporary Nginx') {
+      steps {
+        sh '''
+          docker stop temp-nginx || true
+          docker rm temp-nginx || true
+        '''
       }
     }
 
