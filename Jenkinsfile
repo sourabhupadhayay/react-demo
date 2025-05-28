@@ -28,8 +28,8 @@ pipeline {
     stage('Run Certbot') {
       steps {
        writeFile file: 'certbot-setup.sh', text: '''#!/bin/bash
-DOMAIN="app.4xexch.com"
-EMAIL="sourbhupadhayay@gmail.com"
+       DOMAIN="app.4xexch.com"
+       EMAIL="sourbhupadhayay@gmail.com"
 
 sudo apt update
 sudo apt install -y certbot
