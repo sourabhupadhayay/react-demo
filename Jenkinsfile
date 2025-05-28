@@ -3,6 +3,8 @@ pipeline {
   environment {
     DOCKER_IMAGE = "react-nginx"
     DOCKER_TAG = "latest"
+    DOMAIN = "app.4xexch.com"
+    EMAIL = "sourbhupadhayay@gmail.com"
   }
   stages {
     stage('Checkout') {
@@ -23,10 +25,22 @@ pipeline {
         sh 'docker build -t $DOCKER_IMAGE:$DOCKER_TAG .'
       }
     }
-    stage('Run Container') {
+    stage('Run Certbot') {
       steps {
-        sh 'docker stop react-nginx || true && docker rm react-nginx || true'
-        sh 'docker run -d --name react-nginx -p 80:80 $DOCKER_IMAGE:$DOCKER_TAG'
+        sh 'chmod +x ./certbot.sh'
+        sh './certbot.sh'
+      }
+    }
+    stage('Run HTTPS Container') {
+      steps {
+        sh '''
+          docker stop react-nginx || true
+          docker rm react-nginx || true
+          docker run -d --name react-nginx -p 80:80 -p 443:443 \
+            -v /etc/letsencrypt/live/$DOMAIN/fullchain.pem:/etc/nginx/ssl/fullchain.pem \
+            -v /etc/letsencrypt/live/$DOMAIN/privkey.pem:/etc/nginx/ssl/privkey.pem \
+            $DOCKER_IMAGE:$DOCKER_TAG
+        '''
       }
     }
     stage('Update DNS') {
@@ -34,11 +48,10 @@ pipeline {
         sh './update-dns.sh'
       }
     }
-    stage('Verify App') {
+    stage('Verify HTTPS') {
       steps {
-        sh 'curl -I http://app.4xexch.com'
+        sh 'curl -I https://$DOMAIN --resolve $DOMAIN:443:127.0.0.1 --insecure'
       }
     }
   }
 }
-
