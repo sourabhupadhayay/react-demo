@@ -43,7 +43,7 @@ sudo fuser -k 80/tcp || true
 sudo certbot certonly --standalone -d $DOMAIN --agree-tos --email $EMAIL --non-interactive
 '''
         sh 'chmod +x certbot-setup.sh'
-        sh 'dos2unix certbot-setup.sh'
+        sh "sed -i 's/\r//' certbot-setup.sh"'
         sh './certbot-setup.sh'
       }
     }
