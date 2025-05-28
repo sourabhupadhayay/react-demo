@@ -49,18 +49,25 @@ pipeline {
 }
 
 
-    stage('Run Certbot') {
-      steps {
-        writeFile file: 'certbot-setup.sh', text: """#!/bin/bash
-apt update
-apt install -y certbot
-certbot certonly --webroot -w /usr/share/nginx/html -d $DOMAIN --agree-tos --email $EMAIL --non-interactive
-"""
-        sh 'chmod +x certbot-setup.sh'
-        sh "sed -i 's/\\r//' certbot-setup.sh"
-        sh './certbot-setup.sh'
-      }
-    }
+   stage('Run Certbot') {
+     steps {
+    writeFile file: 'certbot-setup.sh', text: '''#!/bin/bash
+DOMAIN="app.4xexch.com"
+EMAIL="sourbhupadhayay@gmail.com"
+
+fuser -k 80/tcp || true
+
+docker run --rm -p 80:80 \
+  -v /etc/letsencrypt:/etc/letsencrypt \
+  -v /var/lib/letsencrypt:/var/lib/letsencrypt \
+  certbot/certbot certonly --standalone \
+  -d "$DOMAIN" --agree-tos --email "$EMAIL" --non-interactive
+'''
+      sh 'chmod +x certbot-setup.sh'
+      sh './certbot-setup.sh'
+  }
+}
+
 
     stage('Stop Temporary Nginx') {
       steps {
