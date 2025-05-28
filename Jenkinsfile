@@ -50,12 +50,13 @@ pipeline {
 
 
    stage('Run Certbot') {
-     steps {
+    steps {
     writeFile file: 'certbot-setup.sh', text: '''#!/bin/bash
 DOMAIN="app.4xexch.com"
 EMAIL="sourbhupadhayay@gmail.com"
 
-fuser -k 80/tcp || true
+# Stop containers that bind to port 80
+docker ps --filter "publish=80" --format "{{.ID}}" | xargs -r docker stop
 
 docker run --rm -p 80:80 \
   -v /etc/letsencrypt:/etc/letsencrypt \
@@ -67,6 +68,7 @@ docker run --rm -p 80:80 \
       sh './certbot-setup.sh'
   }
 }
+
 
 
     stage('Stop Temporary Nginx') {
