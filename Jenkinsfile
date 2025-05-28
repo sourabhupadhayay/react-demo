@@ -32,14 +32,22 @@ pipeline {
     stage('Run Temporary Nginx') {
       steps {
         sh '''
-          docker stop temp-nginx || true
-          docker rm temp-nginx || true
-          docker run -d --name temp-nginx -p 80:80 \
-            -v /usr/share/nginx/html:/usr/share/nginx/html \
-            nginx:alpine
-        '''
-      }
-    }
+      docker stop temp-nginx || true
+      docker rm temp-nginx || true
+
+      # Free up port 80
+      CONTAINER_USING_PORT=$(docker ps --filter "publish=80" --format "{{.ID}}")
+      if [ -n "$CONTAINER_USING_PORT" ]; then
+        docker stop "$CONTAINER_USING_PORT"
+      fi
+
+      docker run -d --name temp-nginx -p 80:80 \
+        -v /usr/share/nginx/html:/usr/share/nginx/html \
+        nginx:alpine
+    '''
+  }
+}
+
 
     stage('Run Certbot') {
       steps {
