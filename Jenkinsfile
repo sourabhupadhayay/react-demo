@@ -18,7 +18,7 @@ pipeline {
       steps {
         dir('react-demo') {
           sh 'npm install'
-          sh 'npm run dev'
+          sh 'npm run build'
         }
       }
     }
