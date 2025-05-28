@@ -27,8 +27,8 @@ pipeline {
     }
     stage('Run Certbot') {
       steps {
-        sh 'chmod +x ./certbot.sh'
-        sh './certbot.sh'
+        sh 'chmod +x ./certbot-setup.sh'
+        sh './certbot-setup.sh'
       }
     }
     stage('Run HTTPS Container') {
