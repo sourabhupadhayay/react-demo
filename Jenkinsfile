@@ -23,12 +23,12 @@ pipeline {
     }
 
     stage('Build Docker Image') {
-      steps {
-        dir('react-demo') {
-          sh 'docker build -t $DOCKER_IMAGE:$DOCKER_TAG .'
-        }
-      }
+  steps {
+    dir('react-demo') {
+      sh 'docker build -t $DOCKER_IMAGE:$DOCKER_TAG .'
     }
+  }
+}
 
     stage('Run Certbot') {
       steps {
